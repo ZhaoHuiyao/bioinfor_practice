@@ -1,0 +1,13 @@
+Package: bioinforzhy
+Type: Package
+Title: do simple sequence analysis
+Version: 0.1.0
+Author: Zhao Huiyao(2438322575@qq,com)
+Description: package contains:
+        1.download genbank file in Batch;
+        2.extract ID and sequence information in genbank file 
+        3.calculate sequence base frequency
+        4.two squence alignment in dynamic programming algorithm
+License: R3.6.1
+Encoding: UTF-8
+LazyData: true

@@ -1,0 +1,6 @@
+#do simple sequence analysis
+
+export(Download_genbank)
+export(Gen_to_fas)
+export(Base_fre)
+export(Global_align)
