@@ -1,0 +1,7 @@
+install.packages("Rcpp")
+install.packages("usethis")
+install.packages("devtools")
+library(Rcpp)
+library(usethis)
+library(devtools)
+install("d:/bioinfor_practice/1202/bioinforzhy")
