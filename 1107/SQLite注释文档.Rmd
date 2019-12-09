@@ -1,0 +1,109 @@
+---
+title: "SQLite注释文档"
+author:
+  - 赵慧瑶  
+documentclass: ctexart
+output:
+  rticles::ctex:
+    fig_caption: yes
+    number_sections: yes
+    toc: yes
+classoption: "hyperref,"
+---
+
+# SQLite学习链接
+
+-[**RSQLite Tutorial**](https://github.com/ysquared2/RSQLiteTutorial)
+
+-[**SQLite in R**](https://www.datacamp.com/community/tutorials/sqlite-in-r)
+
+-[**A Gentle Introduction to SQL Using SQLite**](https://a-gentle-introduction-to-sql.readthedocs.io/en/latest/)
+
+
+# R代码
+## 下载并加载RSQLite包,设置路径
+```{r}
+#若未下载该包,则使用后面的命令install.packages("RSQLite",dependencies=T)
+library(RSQLite)
+setwd("d:/bioinfor_practice/1107/")
+```
+## 键盘输入数据库数据
+```{r}
+db = dbConnect(SQLite(), dbname="baseball.db")
+dbSendQuery(conn = db,"CREATE TABLE BASEBALL
+       (Team_ID INTEGER,Team_Name TEXT,League TEXT,Payroll REAL,Wins INTEGER)")
+dbSendQuery(conn = db,"INSERT INTO BASEBALL
+         VALUES (1, 'Twins', 'American League', '54641175','1020')")
+dbSendQuery(conn = db,"INSERT INTO BASEBALL
+         VALUES (2, 'Giants', 'American League', '82288960','1033')")
+```
+## 读取存有数据看数据的.csv文件
+```{r}
+#若文件未下载,则使用后面的命令url_path<-"https://raw.githubusercontent.com/ysquared2/RSQLiteTutorial/master/bball.csv"
+#file<-"d:/bioinfor_practice/1107/bball.csv"
+#download.file(url_path,file)
+bball = read.csv("bball.csv")
+db2= dbConnect(SQLite(), dbname="bball.db")
+dbWriteTable(conn = db2, name = "BBALL", bball,
+             overwrite=T,row.names=FALSE)
+```
+## 查看数据库的基本信息
+```{r}
+dbListTables(db) 
+dbListFields(db, "BASEBALL") 
+head(dbReadTable(db, "BASEBALL"))
+dbListTables(db2) 
+dbListFields(db2, "BBALL") 
+head(dbReadTable(db2, "BBALL"))
+```
+## dbGetQuery()函数:按要求 **查询** 数据库信息
+```{r}
+#下面两个查询结果相同
+dbGetQuery(db2, "select * from BBALL WHERE LEAGUE='AL'")[1:3,]
+dbGetQuery(db2, "select * from BBALL WHERE LEAGUE='AL' LIMIT 3")
+#使用了逻辑关系词AND,OR,NOT，判断符号>,>=,=,=<,<,具体行名
+dbGetQuery(db2, "select Team,Payroll,RSWP from BBALL WHERE LEAGUE='AL' AND RSWP>0.5")
+#使用了IN(BETWEEN,NOT IN)与LIKE
+dbGetQuery(db2, "select Team,Payroll,PSW from BBALL WHERE Team LIKE 'M%' AND PSW IN (6,8,11)")
+#使用GROUP与ORDER
+#GROUP:按照某一列中相同项进行合并;ORDER:按照某一行进行排序;
+#AVG():求均值;COUNT():计数;MIN():最小值;MAX():最大值;SUM():求和;
+dbGetQuery(db2, "select Division,AVG(RSW) AS 'average_RSW' from BBALL GROUP BY Division")
+dbGetQuery(db2, "select * from BBALL ORDER BY RSW")
+```
+## 自定义dbInquire()函数
+```{r}
+#database:数据库文件;requirement:具体要求;namecol:提取的具体列;
+#limit='all':获得所有结果;limit=3:获取前3个结果
+dbInquire<-function(database,requirement,namecol,limit){
+  a<-dbListTables(database) 
+  b<-paste(namecol,collapse = ",")
+  
+  if(limit=="all"){query<-paste("select",b,"from",a,"WHERE",requirement,collapse = " ")}
+    else{query<-paste("select",b,"from",a,"WHERE",requirement,"LIMIT",limit,collapse = " ")}
+  result<-dbGetQuery(database,query)
+	return(result)
+}
+a<-db2
+c<-c("Team","Payroll","RSWP")
+b<-"LEAGUE='AL' AND RSWP>0.5"
+d<-3
+dbInquire(a,b,c,d)
+dbInquire(a,b,c,'all')
+```
+
+
+
+## dbExecute()函数: **删除** 或 **插入** 数据库信息
+```{r}
+#删除DELETE所有LEAGUE=‘AL’所在行
+dbExecute(db2, "DELETE  from BBALL WHERE LEAGUE='AL'")
+#插入INSERT一项数据
+dbExecute(db2, "INSERT  INTO BBALL VALUES ('NL','East','Mars',45782939,1000,1030,0.501,8,2,0.678)")
+```
+## dbDisconnect()函数:关闭数据库
+```{r}
+dbDisconnect(db)
+dbDisconnect(db2)
+```
+
